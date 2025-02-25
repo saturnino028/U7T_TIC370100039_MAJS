@@ -13,6 +13,8 @@ int main()
     * referencia de X - X0, Xmax, Xmin. Nas três últimas, estão os valore de referencia de 
     * y - y0, ymax, ymin.
     */
+   char buffer[5];
+   uint16_t valor_adc;
 
     //Inicialização de software e hardware
     stdio_init_all();
@@ -33,7 +35,7 @@ int main()
     sleep_ms(3000);
 
     desenhar_fig(apagado, brilho_matriz); //Apaga Matriz RGB
-    calibrar_joy(&ssd, valores_ref_joy); //Captura valores de referência do joystick
+    //calibrar_joy(&ssd, valores_ref_joy); //Captura valores de referência do joystick
 
     ssd1306_fill(&ssd, !cor); // Limpa o display
     ssd1306_draw_string(&ssd, "Estamos Prontos", 3, 10); // Desenha uma string
@@ -51,6 +53,13 @@ int main()
     
     ssd1306_fill(&ssd, !cor); // Limpa o display
     ssd1306_draw_image(&ssd, fig_principal); //Tela Principal
+    ssd1306_draw_string(&ssd, "TEC SAUDE", 30, 8); // Desenha uma string
+    ssd1306_line(&ssd, 26,21,106,21,cor);
+    ssd1306_rect(&ssd, 0, 0, 128, 64, cor, !cor); // Desenha um retângulo
+    ssd1306_line(&ssd, 0,26,128,26,cor); //Linha horizontal
+    ssd1306_line(&ssd, 43,27,43,63, cor); //Linha Vertical
+    ssd1306_line(&ssd, 86,27,86,63, cor); //Linha Vertical
+    ssd1306_send_data(&ssd);  // Atualiza a tela com os novos pixels
 
     //Ativação das interrupções
     gpio_set_irq_enabled_with_callback(bot_A, GPIO_IRQ_EDGE_FALL, true, botoes_callback); //Interrupção botão A
