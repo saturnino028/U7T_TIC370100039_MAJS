@@ -24,6 +24,7 @@
 /******************* Variáveis Globais *******************/
 
 extern volatile uint16_t top_wrap; //Maior valor de wrap;
+extern volatile bool erro_flag ; //Sinal vizual de erro
 
 /******************* Protótipo Funções *******************/
 
@@ -32,6 +33,15 @@ uint config_pwm(uint8_t _pin, uint16_t _freq_Hz);
 void config_spi();
 void config_i2c();
 void config_pins_gpio();
+
 void calibrar_joy(ssd1306_t *ssd, uint16_t posicoesjoy[6]);
+
+char mensagens_erro(ssd1306_t *ssd, uint8_t _chk_erro);
+void erro_clock(ssd1306_t *ssd);
+void erro_stdio(ssd1306_t *ssd);
+void erro_display();
+void erro_oximetro(ssd1306_t *ssd);
+void erro_sen_temp(ssd1306_t *ssd);
+
 
 #endif //CONFIG_H

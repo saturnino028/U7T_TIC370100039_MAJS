@@ -13,10 +13,12 @@ int main()
     * referencia de X - X0, Xmax, Xmin. Nas três últimas, estão os valore de referencia de 
     * y - y0, ymax, ymin.
     */
-   char buffer[5];
-   uint16_t valor_adc;
+    char buffer[5], buffer_erro[6]; //Buffer para string e para código de erro
+    buffer_erro[5] = '\0';
+    uint16_t valor_adc; //Armazena o valor lido pelo conversor AD
 
-    //Inicialização de software e hardware
+    //Inicialização de hardware e software
+    set_sys_clock_khz(1250000,false); //Cofigura o clock
     stdio_init_all();
     slice_alt = config_pwm(pwm_alt, 1*KHz); //Configura PWM controle de altura do leito
     slice_aju = config_pwm(pwm_aju, 1*KHz); //Configura PWM controle de posição cabeceira
@@ -35,12 +37,29 @@ int main()
     sleep_ms(3000);
 
     desenhar_fig(apagado, brilho_matriz); //Apaga Matriz RGB
-    //calibrar_joy(&ssd, valores_ref_joy); //Captura valores de referência do joystick
+    
+    if(verifica_sens(ADDR_oxim) < 0)
+        buffer_erro[3] = mensagens_erro(&ssd, 4);   
+
+    if(verifica_sens(ADDR_temp) < 0)
+        buffer_erro[4] = mensagens_erro(&ssd, 5);  
+
+    calibrar_joy(&ssd, valores_ref_joy); //Captura valores de referência do joystick
+    
+    gpio_put(LED_R, erro_flag);
+    gpio_put(LED_G, !erro_flag);
 
     ssd1306_fill(&ssd, !cor); // Limpa o display
     ssd1306_draw_string(&ssd, "Estamos Prontos", 3, 10); // Desenha uma string
     ssd1306_draw_string(&ssd, "Para te ajudar", 8, 30); // Desenha uma string
     ssd1306_draw_string(&ssd, "BEM VINDO", 24, 48); // Desenha uma string      
+    ssd1306_send_data(&ssd); // Atualiza o display
+    sleep_ms(3000);
+
+    ssd1306_fill(&ssd, !cor); // Limpa o display
+    ssd1306_draw_string(&ssd, "Funcionando no", 3, 10); // Desenha uma string
+    ssd1306_draw_string(&ssd, "Modo com ", 3, 30); // Desenha uma string
+    ssd1306_draw_string(&ssd, "Incompleto", 3, 48); // Desenha uma string      
     ssd1306_send_data(&ssd); // Atualiza o display
     sleep_ms(3000);
 
@@ -59,6 +78,10 @@ int main()
     ssd1306_line(&ssd, 0,26,128,26,cor); //Linha horizontal
     ssd1306_line(&ssd, 43,27,43,63, cor); //Linha Vertical
     ssd1306_line(&ssd, 86,27,86,63, cor); //Linha Vertical
+    if(buffer_erro[3] == 'O')
+        ssd1306_draw_string(&ssd, "OUT", 95, 48);
+    if(buffer_erro[4] == 'T')
+            ssd1306_draw_string(&ssd, "OUT", 55, 48);
     ssd1306_send_data(&ssd);  // Atualiza a tela com os novos pixels
 
     //Ativação das interrupções

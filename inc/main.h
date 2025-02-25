@@ -12,6 +12,7 @@
 #include "pinout.h"
 #include "config.h"
 #include "ssd1306.h"
+#include "sensores.h"
 #include "matriz_5x5.h"
 #include "pico/stdlib.h"
 #include "funcoes_gpio.h"

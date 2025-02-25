@@ -5,7 +5,7 @@
 
 /************************ Declaração de Variaveis ************************/
 
-volatile uint16_t top_wrap = 1000;
+volatile uint16_t top_wrap = 1000; volatile bool erro_flag = 0;
 
 /*********************** Implementação das funções **********************/
 /**
@@ -31,7 +31,7 @@ uint config_pwm(uint8_t _pin, uint16_t _freq_Hz)
     pwm_set_clkdiv(slice, 125.0); //Define o divisor de clock
     pwm_set_wrap(slice, top_wrap); //Define valor do wrap
     Fpwm = 125000000/(125.0*top_wrap);
-    printf("PWM definido para %.2f KHz\n", Fpwm);
+    printf("PWM definido para %.2f Hz\n", Fpwm);
     return slice; //Retorna o slice correspondente
 }
 
@@ -291,4 +291,111 @@ void calibrar_joy(ssd1306_t *ssd, uint16_t posicoesjoy[6])
     ssd1306_send_data(ssd); // Atualiza o display
     gpio_put(LED_G, 1);
     sleep_ms(delay_padrao);
+}
+
+char mensagens_erro(ssd1306_t *ssd, uint8_t _chk_erro)
+{
+    char erro = 'E';
+    uint8_t slice_b = config_pwm(buz_B, 1*KHz); //Configura um slice para 1KHz
+    float duty_cicle = 50.0;
+
+    switch (_chk_erro)
+    {
+        case 1:
+            erro_clock(ssd);
+            campainha(duty_cicle, 500,slice_b, buz_B); //Alerta sonoro
+            erro = 'C';
+            break;
+        case 2:
+            erro_stdio(ssd);
+            campainha(duty_cicle, 500,slice_b, buz_B); //Alerta sonoro
+            erro = 'S';
+            break;
+        case 3:
+            erro_display();
+            campainha(duty_cicle, 500,slice_b, buz_B); //Alerta sonoro
+            erro = 'D';
+            break;
+        case 4:
+            erro_oximetro(ssd);
+            campainha(duty_cicle, 1000,slice_b, buz_B); //Alerta sonoro
+            erro  = 'O';
+            break;
+        case 5:
+            erro_sen_temp(ssd);
+            campainha(duty_cicle, 1000,slice_b, buz_B); //Alerta sonoro
+            erro = 'T';
+            break;
+        
+        default:
+            erro = 'E';
+            break;
+    }
+    erro_flag = 1;
+    return erro;
+}
+
+/**
+ * @brief função de debbug erro de clock
+ */
+void erro_clock(ssd1306_t *ssd)
+{
+    printf("Erro na configuração do clock do sistema\n");
+    printf("Clock definido para %ld\n", frequency_count_khz(CLOCKS_FC0_SRC_VALUE_CLK_SYS));
+}
+
+/**
+ * @brief função de debbug erro da biblioteca stdio
+ */
+void erro_stdio(ssd1306_t *ssd)
+{
+    gpio_put(LED_R, 1);
+}
+
+/**
+ * @brief função de debbug erro do display
+ */
+void erro_display()
+{
+    gpio_put(LED_R, 1);
+
+}
+
+/**
+ * @brief função de debbug erro oximetro
+ */
+void erro_oximetro(ssd1306_t *ssd)
+{
+    printf("Módulo Oximetro não encontrado\n");
+
+    bool cor = true;
+
+    gpio_put(LED_R, cor);
+
+    ssd1306_fill(ssd, !cor); // Limpa o display
+    ssd1306_draw_string(ssd, "Modulo Oximetro", 2, 10); // Desenha uma string
+    ssd1306_draw_string(ssd, "Nao encontrado", 2, 30); // Desenha uma string  
+    ssd1306_send_data(ssd); // Atualiza o display
+    sleep_ms(3000);
+
+}
+
+/**
+ * @brief função de debbug erro sensor de temperatura
+ */
+void erro_sen_temp(ssd1306_t *ssd)
+{
+
+    printf("Módulo Sensor de Temperatura não encontrado\n");
+
+    bool cor = true;
+
+    gpio_put(LED_R, cor);
+    
+    ssd1306_fill(ssd, !cor); // Limpa o display
+    ssd1306_draw_string(ssd, "Sensor de", 3, 10); // Desenha uma string
+    ssd1306_draw_string(ssd, "Temperatura", 3, 30); // Desenha uma string
+    ssd1306_draw_string(ssd, "Nao Encontrado", 3, 48); // Desenha uma string      
+    ssd1306_send_data(ssd); // Atualiza o display
+    sleep_ms(3000);
 }
