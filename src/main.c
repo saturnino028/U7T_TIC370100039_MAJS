@@ -15,7 +15,11 @@ int main()
     */
     char buffer[4], buffer_erro[6]; //Buffer para string e para código de erro
     buffer_erro[5] = '\0';
-    uint16_t valor_adc, valor_adc_passado; //Armazena o valor lido pelo conversor AD
+    uint16_t valor_adc, valor_adc_passado = 0; //Armazena o valor lido pelo conversor AD
+    absolute_time_t tempo_de_amostragem; //Coordena a taxa de amostragem do MIC
+    const uint8_t amostras_por_segundo = 4; // Frequência de amostragem
+    uint16_t adc_value_x, adc_value_y; //Auxiliar para leitura ADC do Joystick
+    uint16_t passadoX, passadoY; //Armazena o valor antigo de X e Y
 
     //Inicialização de hardware e software
     set_sys_clock_khz(1250000,false); //Cofigura o clock
@@ -44,7 +48,7 @@ int main()
     if(verifica_sens(ADDR_temp) < 0)
         buffer_erro[4] = mensagens_erro(&ssd, 5);  
 
-    //calibrar_joy(&ssd, valores_ref_joy); //Captura valores de referência do joystick
+    calibrar_joy(&ssd, valores_ref_joy); //Captura valores de referência do joystick
     
     gpio_put(LED_R, erro_flag);
     gpio_put(LED_G, !erro_flag);
@@ -70,14 +74,7 @@ int main()
     ssd1306_send_data(&ssd); // Atualiza o display
     sleep_ms(2000);    
     
-    ssd1306_fill(&ssd, !cor); // Limpa o display
-    ssd1306_draw_image(&ssd, fig_principal); //Tela Principal
-    ssd1306_draw_string(&ssd, "TEC SAUDE", 30, 8); // Desenha uma string
-    ssd1306_line(&ssd, 26,21,106,21,cor);
-    ssd1306_rect(&ssd, 0, 0, 128, 64, cor, !cor); // Desenha um retângulo
-    ssd1306_line(&ssd, 0,26,128,26,cor); //Linha horizontal
-    ssd1306_line(&ssd, 43,27,43,63, cor); //Linha Vertical
-    ssd1306_line(&ssd, 86,27,86,63, cor); //Linha Vertical
+    tela_principal(&ssd);
     if(buffer_erro[3] == 'O')
         ssd1306_draw_string(&ssd, "OUT", 95, 48);
     if(buffer_erro[4] == 'T')
@@ -89,16 +86,17 @@ int main()
     gpio_set_irq_enabled_with_callback(bot_B, GPIO_IRQ_EDGE_FALL, true, botoes_callback); //Interrupção botão B
     gpio_set_irq_enabled_with_callback(bot_joy, GPIO_IRQ_EDGE_FALL, true, botoes_callback); //Interrupção botão Joystick
 
-    valor_adc_passado = 0;
-
-    absolute_time_t tempo_de_amostragem = delayed_by_us(get_absolute_time(), 1000000/8000);
+    tempo_de_amostragem = delayed_by_us(get_absolute_time(), 1000000/amostras_por_segundo); 
+    
     //Loop Principal
     while(1)
     {
         int c = getchar_timeout_us(1000); //Fazer leitura da serial
         if(c != '\0' && c > 0)
             acoes_char(c); //Processa dados da serial
+            
         tratamento_bot(&ssd); //Processa dados dos botões
+
         if(time_reached(tempo_de_amostragem)) // Coleta amostras no mic
         {        
             adc_select_input(2); // Canal do MIC
@@ -123,7 +121,37 @@ int main()
                 
                 valor_adc_passado = valor_adc;
             }
-            tempo_de_amostragem = delayed_by_us(get_absolute_time(), 1000000/8000);
+            tempo_de_amostragem = delayed_by_us(get_absolute_time(), 1000000/amostras_por_segundo);
+        }
+
+        adc_select_input(0); // Seleciona o ADC para eixo Y. O pino 26 como entrada analógica
+        adc_value_y = adc_read();
+        adc_select_input(1); // Seleciona o ADC para eixo X. O pino 27 como entrada analógica
+        adc_value_x = adc_read();
+
+        //Verifica se houve alteração significativa no eixo X (>5%)
+        if(abs(passadoX - adc_value_x)> (passadoX*0.05) ) 
+        {
+            passadoX = adc_value_x; //Atualiza variavel de controle
+
+        }
+        //Verifica se houve alteração significativa no eixo Y (>5%)
+        if(abs(passadoY - adc_value_y) > (passadoY*0.05))
+        { 
+            passadoY = adc_value_y;//Atualiza variavel de controle
         }
     }
+}
+
+void tela_principal(ssd1306_t *ssd)
+{
+    bool cor = true;
+    ssd1306_fill(ssd, !cor); // Limpa o display
+    ssd1306_draw_image(ssd, fig_principal); //Tela Principal
+    ssd1306_draw_string(ssd, "TEC SAUDE", 30, 8); // Desenha uma string
+    ssd1306_line(ssd, 26,21,106,21,cor);
+    ssd1306_rect(ssd, 0, 0, 128, 64, cor, !cor); // Desenha um retângulo
+    ssd1306_line(ssd, 0,26,128,26,cor); //Linha horizontal
+    ssd1306_line(ssd, 43,27,43,63, cor); //Linha Vertical
+    ssd1306_line(ssd, 86,27,86,63, cor); //Linha Vertical
 }
