@@ -13,9 +13,9 @@ int main()
     * referencia de X - X0, Xmax, Xmin. Nas três últimas, estão os valore de referencia de 
     * y - y0, ymax, ymin.
     */
-    char buffer[5], buffer_erro[6]; //Buffer para string e para código de erro
+    char buffer[4], buffer_erro[6]; //Buffer para string e para código de erro
     buffer_erro[5] = '\0';
-    uint16_t valor_adc; //Armazena o valor lido pelo conversor AD
+    uint16_t valor_adc, valor_adc_passado; //Armazena o valor lido pelo conversor AD
 
     //Inicialização de hardware e software
     set_sys_clock_khz(1250000,false); //Cofigura o clock
@@ -44,7 +44,7 @@ int main()
     if(verifica_sens(ADDR_temp) < 0)
         buffer_erro[4] = mensagens_erro(&ssd, 5);  
 
-    calibrar_joy(&ssd, valores_ref_joy); //Captura valores de referência do joystick
+    //calibrar_joy(&ssd, valores_ref_joy); //Captura valores de referência do joystick
     
     gpio_put(LED_R, erro_flag);
     gpio_put(LED_G, !erro_flag);
@@ -57,9 +57,9 @@ int main()
     sleep_ms(3000);
 
     ssd1306_fill(&ssd, !cor); // Limpa o display
-    ssd1306_draw_string(&ssd, "Funcionando no", 3, 10); // Desenha uma string
-    ssd1306_draw_string(&ssd, "Modo com ", 3, 30); // Desenha uma string
-    ssd1306_draw_string(&ssd, "Incompleto", 3, 48); // Desenha uma string      
+    ssd1306_draw_string(&ssd, "Funcionando", 3, 10); // Desenha uma string
+    ssd1306_draw_string(&ssd, "de forma ", 3, 30); // Desenha uma string
+    ssd1306_draw_string(&ssd, "Incompleta", 3, 48); // Desenha uma string      
     ssd1306_send_data(&ssd); // Atualiza o display
     sleep_ms(3000);
 
@@ -89,6 +89,9 @@ int main()
     gpio_set_irq_enabled_with_callback(bot_B, GPIO_IRQ_EDGE_FALL, true, botoes_callback); //Interrupção botão B
     gpio_set_irq_enabled_with_callback(bot_joy, GPIO_IRQ_EDGE_FALL, true, botoes_callback); //Interrupção botão Joystick
 
+    valor_adc_passado = 0;
+
+    absolute_time_t tempo_de_amostragem = delayed_by_us(get_absolute_time(), 1000000/8000);
     //Loop Principal
     while(1)
     {
@@ -96,5 +99,30 @@ int main()
         if(c != '\0' && c > 0)
             acoes_char(c); //Processa dados da serial
         tratamento_bot(&ssd); //Processa dados dos botões
+        if(time_reached(tempo_de_amostragem)) // Coleta amostras no mic
+        {        
+            adc_select_input(2); // Canal do MIC
+            valor_adc = adc_read();
+            tempo_de_amostragem = delayed_by_us(get_absolute_time(), 1000000/8000);
+        }
+        
+        // Verifica se houve alteração significativa no eixo X (>5%)
+        if(abs(valor_adc - valor_adc_passado) > (valor_adc_passado * 0.05)) 
+        {  
+            uint8_t valor_convertido = (uint8_t)((valor_adc * 200.0) / 4096.0);
+            
+            memset(buffer, 0, sizeof(buffer));
+            strcpy(buffer, "   ");  // Preenche com espaços (3 caracteres)
+            sprintf(buffer, "%d", valor_convertido);  // Máximo de 200 BPM
+            
+            valor_adc_passado = valor_adc;
+            
+            printf("ADC: %d, Convertido: %d\n", valor_adc, valor_convertido);
+
+            // Atualiza a tela SOMENTE após a mudança
+            ssd1306_rect(&ssd, 43, 4, 35, 16, !cor, !cor);
+            ssd1306_draw_string(&ssd, buffer, 8, 48);
+            ssd1306_send_data(&ssd);
+        }
     }
 }
