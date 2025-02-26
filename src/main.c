@@ -103,26 +103,27 @@ int main()
         {        
             adc_select_input(2); // Canal do MIC
             valor_adc = adc_read();
-            tempo_de_amostragem = delayed_by_us(get_absolute_time(), 1000000/8000);
-        }
-        
-        // Verifica se houve alteração significativa no eixo X (>5%)
-        if(abs(valor_adc - valor_adc_passado) > (valor_adc_passado * 0.05)) 
-        {  
-            uint8_t valor_convertido = (uint8_t)((valor_adc * 200.0) / 4096.0);
-            
-            memset(buffer, 0, sizeof(buffer));
-            strcpy(buffer, "   ");  // Preenche com espaços (3 caracteres)
-            sprintf(buffer, "%d", valor_convertido);  // Máximo de 200 BPM
-            
-            valor_adc_passado = valor_adc;
-            
-            printf("ADC: %d, Convertido: %d\n", valor_adc, valor_convertido);
 
-            // Atualiza a tela SOMENTE após a mudança
-            ssd1306_rect(&ssd, 43, 4, 35, 16, !cor, !cor);
-            ssd1306_draw_string(&ssd, buffer, 8, 48);
-            ssd1306_send_data(&ssd);
+            // Verifica se houve alteração significativa no mic (>5%)
+            if(abs(valor_adc - valor_adc_passado) > (valor_adc_passado * 0.05)) 
+            {  
+                uint8_t valor_convertido = (uint8_t)((valor_adc * 200.0) / 4096.0);
+                
+                //Limpar região do número
+                memset(buffer, 0, sizeof(buffer));
+                strcpy(buffer, "   ");  // Preenche com espaços (3 caracteres) 
+                ssd1306_draw_string(&ssd, buffer, 8, 48); //Limpara número
+                ssd1306_send_data(&ssd);
+
+                // Atualiza a tela SOMENTE após a mudança
+                memset(buffer, 0, sizeof(buffer));
+                sprintf(buffer, "%d", valor_convertido);  // Máximo de 200 BPM
+                ssd1306_draw_string(&ssd, buffer, 8, 48);
+                ssd1306_send_data(&ssd);
+                
+                valor_adc_passado = valor_adc;
+            }
+            tempo_de_amostragem = delayed_by_us(get_absolute_time(), 1000000/8000);
         }
     }
 }

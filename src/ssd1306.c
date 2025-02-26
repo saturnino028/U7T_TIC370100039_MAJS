@@ -161,7 +161,11 @@ void ssd1306_draw_char(ssd1306_t *ssd, char c, uint8_t x, uint8_t y)
 {
   uint16_t index = 0;
 
-  if (c >= 'A' && c <= 'Z')
+  if (c == ' ')
+  {
+    index = 0; // Para espaços vazios
+  }
+  else if (c >= 'A' && c <= 'Z')
   {
     index = (c - 'A' + 11) * 8; // Para letras maiúsculas
   }
@@ -253,5 +257,3 @@ void ssd1306_draw_image(ssd1306_t *ssd, uint8_t _imagem_data[1024])
     }
     ssd1306_send_data(ssd);  // Atualiza a tela com os novos pixels
 }
-
-
