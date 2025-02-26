@@ -5,7 +5,6 @@
 int main()
 {
     //Declaração de variáveis
-    uint slice_alt, slice_aju; //Variaveis para armazenar o slice da altura e do ajuste
     ssd1306_t ssd; // Inicializa a estrutura do display
     bool cor = true; //Cor do display
     uint16_t valores_ref_joy[6] = {2047,4095,0,2047,4095,0}; /* é um vetor com as posições 
@@ -24,8 +23,6 @@ int main()
     //Inicialização de hardware e software
     set_sys_clock_khz(1250000,false); //Cofigura o clock
     stdio_init_all();
-    slice_alt = config_pwm(pwm_alt, 1*KHz); //Configura PWM controle de altura do leito
-    slice_aju = config_pwm(pwm_aju, 1*KHz); //Configura PWM controle de posição cabeceira
     config_pins_gpio(); //Configura os pinos GPIO
     init_matriz(); //Configura a matriz de LEDs 5x5 WS2812
     config_i2c(); //Configura I2C para os sensores
@@ -54,6 +51,7 @@ int main()
     gpio_put(LED_G, !erro_flag);
 
     ssd1306_fill(&ssd, !cor); // Limpa o display
+    ssd1306_rect(&ssd, 3, 3, 122, 58, cor, !cor); // Desenha um retângulo
     ssd1306_draw_string(&ssd, "Estamos Prontos", 3, 10); // Desenha uma string
     ssd1306_draw_string(&ssd, "Para te ajudar", 8, 30); // Desenha uma string
     ssd1306_draw_string(&ssd, "BEM VINDO", 24, 48); // Desenha uma string      
@@ -61,6 +59,7 @@ int main()
     sleep_ms(3000);
 
     ssd1306_fill(&ssd, !cor); // Limpa o display
+    ssd1306_rect(&ssd, 3, 3, 122, 58, cor, !cor); // Desenha um retângulo
     ssd1306_draw_string(&ssd, "Funcionando", 3, 10); // Desenha uma string
     ssd1306_draw_string(&ssd, "de forma ", 3, 30); // Desenha uma string
     ssd1306_draw_string(&ssd, "Incompleta", 3, 48); // Desenha uma string      
@@ -68,18 +67,14 @@ int main()
     sleep_ms(3000);
 
     ssd1306_fill(&ssd, !cor); // Limpa o display
+    ssd1306_rect(&ssd, 3, 3, 122, 58, cor, !cor); // Desenha um retângulo
     ssd1306_draw_string(&ssd, "Por favor", 8, 10); // Desenha uma string
     ssd1306_draw_string(&ssd, "Consulte o", 8, 30); // Desenha uma string
     ssd1306_draw_string(&ssd, "manual", 8, 48); // Desenha uma string      
     ssd1306_send_data(&ssd); // Atualiza o display
     sleep_ms(2000);    
     
-    tela_principal(&ssd);
-    if(buffer_erro[3] == 'O')
-        ssd1306_draw_string(&ssd, "OUT", 95, 48);
-    if(buffer_erro[4] == 'T')
-            ssd1306_draw_string(&ssd, "OUT", 55, 48);
-    ssd1306_send_data(&ssd);  // Atualiza a tela com os novos pixels
+    tela_principal(&ssd, buffer_erro);
 
     //Ativação das interrupções
     gpio_set_irq_enabled_with_callback(bot_A, GPIO_IRQ_EDGE_FALL, true, botoes_callback); //Interrupção botão A
@@ -96,7 +91,16 @@ int main()
             acoes_char(c); //Processa dados da serial
             
         tratamento_bot(&ssd); //Processa dados dos botões
+        if(flag_botoes == 3) //Voltar para tela principal
+        {
+            tela_principal(&ssd, buffer_erro);
 
+            ssd1306_draw_string(&ssd, buffer, 8, 48);
+            ssd1306_send_data(&ssd);
+            flag_botoes = 0;
+        }
+        
+        //Sensor de Batimentos
         if(time_reached(tempo_de_amostragem)) // Coleta amostras no mic
         {        
             adc_select_input(2); // Canal do MIC
@@ -124,6 +128,7 @@ int main()
             tempo_de_amostragem = delayed_by_us(get_absolute_time(), 1000000/amostras_por_segundo);
         }
 
+        //Controle PWM
         adc_select_input(0); // Seleciona o ADC para eixo Y. O pino 26 como entrada analógica
         adc_value_y = adc_read();
         adc_select_input(1); // Seleciona o ADC para eixo X. O pino 27 como entrada analógica
@@ -133,12 +138,17 @@ int main()
         if(abs(passadoX - adc_value_x)> (passadoX*0.05) ) 
         {
             passadoX = adc_value_x; //Atualiza variavel de controle
-
+            funcoes_joystick(&ssd, passadoX, passadoY, valores_ref_joy);
+            ssd1306_draw_string(&ssd, buffer, 8, 48);
+            tela_principal(&ssd, buffer_erro);
         }
         //Verifica se houve alteração significativa no eixo Y (>5%)
         if(abs(passadoY - adc_value_y) > (passadoY*0.05))
         { 
             passadoY = adc_value_y;//Atualiza variavel de controle
+            funcoes_joystick(&ssd, passadoX, passadoY, valores_ref_joy);
+            ssd1306_draw_string(&ssd, buffer, 8, 48);
+            tela_principal(&ssd, buffer_erro);
         }
     }
 }

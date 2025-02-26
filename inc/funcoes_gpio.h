@@ -17,6 +17,7 @@
 /******************* Variáveis Globais *******************/
 
 extern volatile uint8_t flag_botoes;
+extern volatile uint8_t func_bot_joy;
 
 /******************* Protótipo Funções *******************/
 

@@ -72,6 +72,6 @@ void config_i2c_display(ssd1306_t *ssd);
 
 void ssd1306_draw_image(ssd1306_t *ssd, uint8_t _imagem_data[1024]) ;
 
-void tela_principal(ssd1306_t *ssd);
+void tela_principal(ssd1306_t *ssd, char _erros[11]);
 
 #endif // SSD1306_H

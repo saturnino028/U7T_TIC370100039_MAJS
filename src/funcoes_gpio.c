@@ -4,7 +4,7 @@
 #include "funcoes_gpio.h"
 volatile uint32_t passado = 0; //Usada para implementar o debouncing
 volatile uint8_t flag_botoes = 0; //Usada para sinalizar eventos de interrupção
-volatile bool func_bot_joy = 0; //determina a função que será executada pelo Joystick
+volatile uint8_t func_bot_joy = 0; //determina a função que será executada pelo Joystick
 volatile bool modo_panico = 0;  //Ativa o modo pânico/emergência
 volatile bool control = true;
 volatile uint16_t freq = 1000, freq_min = 1000, freq_max = 1500;
@@ -52,8 +52,6 @@ void tratamento_bot(ssd1306_t *ssd)
     case 3:
         botao_joy(ssd);
         sleep_ms(2000);
-        tela_principal(ssd);
-        flag_botoes = 0;
         break;
     default:
         break;

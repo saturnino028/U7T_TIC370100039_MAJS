@@ -259,7 +259,7 @@ void ssd1306_draw_image(ssd1306_t *ssd, uint8_t _imagem_data[1024])
 }
 
 
-void tela_principal(ssd1306_t *ssd)
+void tela_principal(ssd1306_t *ssd, char _erros[11])
 {
     bool cor = true;
     ssd1306_fill(ssd, !cor); // Limpa o display
@@ -269,5 +269,10 @@ void tela_principal(ssd1306_t *ssd)
     ssd1306_rect(ssd, 0, 0, 128, 64, cor, !cor); // Desenha um retângulo
     ssd1306_line(ssd, 0,26,128,26,cor); //Linha horizontal
     ssd1306_line(ssd, 43,27,43,63, cor); //Linha Vertical
-    ssd1306_line(ssd, 86,27,86,63, cor); //Linha Vertical
+    ssd1306_line(ssd, 86,27,86,63, cor); //Linha Vertical   
+    if(_erros[3] == 'O')
+      ssd1306_draw_string(ssd, "OUT", 95, 48);
+    if(_erros[4] == 'T')
+      ssd1306_draw_string(ssd, "OUT", 55, 48);
+    ssd1306_send_data(ssd);
 }
