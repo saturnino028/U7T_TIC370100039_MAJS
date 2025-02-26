@@ -51,6 +51,8 @@ void tratamento_bot(ssd1306_t *ssd)
         break;
     case 3:
         botao_joy(ssd);
+        sleep_ms(2000);
+        tela_principal(ssd);
         flag_botoes = 0;
         break;
     default:

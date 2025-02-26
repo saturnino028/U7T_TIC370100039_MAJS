@@ -26,5 +26,6 @@ void duty_cicle(float _percent, uint _slice, uint8_t _pin);
 void campainha(float _dc,  uint32_t _duracao_ms, uint _slice, uint8_t _pin);
 void controle_altura();
 void controle_pos_cabeceira();
+void funcoes_joystick();
 
 #endif //FUNCOES_PWM_H

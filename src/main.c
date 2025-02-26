@@ -142,16 +142,3 @@ int main()
         }
     }
 }
-
-void tela_principal(ssd1306_t *ssd)
-{
-    bool cor = true;
-    ssd1306_fill(ssd, !cor); // Limpa o display
-    ssd1306_draw_image(ssd, fig_principal); //Tela Principal
-    ssd1306_draw_string(ssd, "TEC SAUDE", 30, 8); // Desenha uma string
-    ssd1306_line(ssd, 26,21,106,21,cor);
-    ssd1306_rect(ssd, 0, 0, 128, 64, cor, !cor); // Desenha um retângulo
-    ssd1306_line(ssd, 0,26,128,26,cor); //Linha horizontal
-    ssd1306_line(ssd, 43,27,43,63, cor); //Linha Vertical
-    ssd1306_line(ssd, 86,27,86,63, cor); //Linha Vertical
-}

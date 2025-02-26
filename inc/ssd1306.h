@@ -10,6 +10,7 @@
 #include "pinout.h"
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
+#include "figuras_ssd1306.h"
 
 /******************* Defines e Variaveis Globais ******************/
 
@@ -70,5 +71,7 @@ void ssd1306_draw_string(ssd1306_t *ssd, const char *str, uint8_t x, uint8_t y);
 void config_i2c_display(ssd1306_t *ssd);
 
 void ssd1306_draw_image(ssd1306_t *ssd, uint8_t _imagem_data[1024]) ;
+
+void tela_principal(ssd1306_t *ssd);
 
 #endif // SSD1306_H

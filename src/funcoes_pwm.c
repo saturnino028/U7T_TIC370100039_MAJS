@@ -52,3 +52,8 @@ void campainha(float _dc, uint32_t _duracao_ms, uint _slice, uint8_t _pin)
     dados._pin = _pin;
     add_alarm_in_ms(_duracao_ms, fim_campainha, &dados, false);
 }
+
+void funcoes_joystick()
+{
+    
+}

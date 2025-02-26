@@ -33,5 +33,5 @@
 /******************* Variáveis Globais *******************/
 
 /******************* Protótipo Funções *******************/
-void tela_principal(ssd1306_t *ssd);
+
 #endif //MAIN_H
