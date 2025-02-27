@@ -12,13 +12,14 @@ int main()
     * referencia de X - X0, Xmax, Xmin. Nas três últimas, estão os valore de referencia de 
     * y - y0, ymax, ymin.
     */
-    char buffer[4], buffer_erro[6]; //Buffer para string e para código de erro
+    char buffer[4], buffer_erro[11]; //Buffer para string e para código de erro
     buffer_erro[5] = '\0';
     uint16_t valor_adc, valor_adc_passado = 0; //Armazena o valor lido pelo conversor AD
     absolute_time_t tempo_de_amostragem; //Coordena a taxa de amostragem do MIC
     const uint8_t amostras_por_segundo = 4; // Frequência de amostragem
     uint16_t adc_value_x, adc_value_y; //Auxiliar para leitura ADC do Joystick
     uint16_t passadoX, passadoY; //Armazena o valor antigo de X e Y
+    uint64_t tempo_joy = 0;
 
     //Inicialização de hardware e software
     set_sys_clock_khz(1250000,false); //Cofigura o clock
@@ -128,27 +129,32 @@ int main()
             tempo_de_amostragem = delayed_by_us(get_absolute_time(), 1000000/amostras_por_segundo);
         }
 
-        //Controle PWM
-        adc_select_input(0); // Seleciona o ADC para eixo Y. O pino 26 como entrada analógica
-        adc_value_y = adc_read();
-        adc_select_input(1); // Seleciona o ADC para eixo X. O pino 27 como entrada analógica
-        adc_value_x = adc_read();
-
-        //Verifica se houve alteração significativa no eixo X (>5%)
-        if(abs(passadoX - adc_value_x)> (passadoX*0.05) ) 
+        if((to_us_since_boot(get_absolute_time()) - tempo_joy) > 2000000) //deve se segurar o joy por 2 segundos para salvar posição
         {
-            passadoX = adc_value_x; //Atualiza variavel de controle
-            funcoes_joystick(&ssd, passadoX, passadoY, valores_ref_joy);
-            ssd1306_draw_string(&ssd, buffer, 8, 48);
-            tela_principal(&ssd, buffer_erro);
-        }
-        //Verifica se houve alteração significativa no eixo Y (>5%)
-        if(abs(passadoY - adc_value_y) > (passadoY*0.05))
-        { 
-            passadoY = adc_value_y;//Atualiza variavel de controle
-            funcoes_joystick(&ssd, passadoX, passadoY, valores_ref_joy);
-            ssd1306_draw_string(&ssd, buffer, 8, 48);
-            tela_principal(&ssd, buffer_erro);
+            //Controle PWM
+            adc_select_input(0); // Seleciona o ADC para eixo Y. O pino 26 como entrada analógica
+            adc_value_y = adc_read();
+            adc_select_input(1); // Seleciona o ADC para eixo X. O pino 27 como entrada analógica
+            adc_value_x = adc_read();
+
+            //Verifica se houve alteração significativa no eixo X (>5%)
+            if(abs(passadoX - adc_value_x) > (passadoX*0.05)) 
+            {
+                passadoX = adc_value_x; //Atualiza variavel de controle
+                funcoes_joystick(&ssd, passadoX, passadoY, valores_ref_joy);
+                ssd1306_draw_string(&ssd, buffer, 8, 48);
+                tela_principal(&ssd, buffer_erro);
+
+            }
+            //Verifica se houve alteração significativa no eixo Y (>5%)
+            if(abs(passadoY - adc_value_y) > (passadoY*0.05))
+            {
+                passadoY = adc_value_y;//Atualiza variavel de controle
+                funcoes_joystick(&ssd, passadoX, passadoY, valores_ref_joy);
+                ssd1306_draw_string(&ssd, buffer, 8, 48);
+                tela_principal(&ssd, buffer_erro);
+            }
+            tempo_joy = to_us_since_boot(get_absolute_time());
         }
     }
 }

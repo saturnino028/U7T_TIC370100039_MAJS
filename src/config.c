@@ -137,8 +137,8 @@ void calibrar_joy(ssd1306_t *ssd, uint16_t posicoesjoy[6])
     ssd1306_fill(ssd, !cor); // Limpa o display
     ssd1306_rect(ssd, 3, 3, 122, 58, cor, !cor); // Desenha um retângulo
     ssd1306_draw_string(ssd, "Nao Mexa", 8, 10); // Desenha uma string
-    ssd1306_draw_string(ssd, "Fazendo a", 8, 30); // Desenha uma string
-    ssd1306_draw_string(ssd, "Calibracao ini", 8, 48); // Desenha uma string   
+    ssd1306_draw_string(ssd, "Fazendo a cali", 8, 30); // Desenha uma string
+    ssd1306_draw_string(ssd, "bracao inicial", 8, 48); // Desenha uma string   
     ssd1306_send_data(ssd); // Atualiza o display
     sleep_ms(3000);
 
@@ -190,7 +190,7 @@ void calibrar_joy(ssd1306_t *ssd, uint16_t posicoesjoy[6])
     ssd1306_fill(ssd, !cor); // Limpa o display
     ssd1306_rect(ssd, 3, 3, 122, 58, cor, !cor); // Desenha um retângulo
     ssd1306_draw_string(ssd, "Segure o Joy", 8, 10); // Desenha uma string
-    ssd1306_draw_string(ssd, "Todo a esqueda", 8, 30); // Desenha uma string
+    ssd1306_draw_string(ssd, "Todo a esquerda", 8, 30); // Desenha uma string
     ssd1306_draw_string(ssd, "Espere", 8, 48); // Desenha uma string   
     ssd1306_send_data(ssd); // Atualiza o display
     sleep_ms(delay_padrao);   
